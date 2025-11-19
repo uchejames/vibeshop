@@ -1,0 +1,147 @@
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { UserPlus, Mail, Lock, User, AlertCircle } from 'lucide-react'
+
+export default function SignupPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [userType, setUserType] = useState('customer')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const { signup } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSignup = (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    if (!fullName.trim()) {
+      setError('Full name is required')
+      setLoading(false)
+      return
+    }
+
+    try {
+      signup(email, password, fullName, userType)
+      if (userType === 'creative') {
+        navigate('/dashboard/creative')
+      } else {
+        navigate('/shop')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Signup failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4 pt-24">
+      <div className="w-full max-w-md border border-slate-700 bg-slate-800/50 p-8 rounded-lg">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-500 rounded-lg flex items-center justify-center font-bold text-white text-2xl mx-auto mb-4">
+            V
+          </div>
+          <h1 className="text-2xl font-bold text-white">Vibeshop</h1>
+          <p className="text-slate-400 text-sm mt-2">Join our creative community</p>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3 mb-6">
+            <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-red-200 text-sm">{error}</p>
+          </div>
+        )}
+
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setUserType('customer')}
+            className={`flex-1 py-2 rounded-lg transition-colors text-sm font-medium ${
+              userType === 'customer'
+                ? 'bg-orange-500 text-white'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            Customer
+          </button>
+          <button
+            onClick={() => setUserType('creative')}
+            className={`flex-1 py-2 rounded-lg transition-colors text-sm font-medium ${
+              userType === 'creative'
+                ? 'bg-orange-500 text-white'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            Creative
+          </button>
+        </div>
+
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
+            <div className="relative">
+              <User size={20} className="absolute left-3 top-3 text-slate-500" />
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-400"
+                placeholder="Your name"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
+            <div className="relative">
+              <Mail size={20} className="absolute left-3 top-3 text-slate-500" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-400"
+                placeholder="your@email.com"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+            <div className="relative">
+              <Lock size={20} className="absolute left-3 top-3 text-slate-500" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-400"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <UserPlus size={16} />
+            {loading ? 'Creating account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        <p className="text-center text-slate-400 text-sm mt-6">
+          Already have an account?{' '}
+          <Link to="/login" className="text-orange-400 hover:text-orange-300">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}

@@ -12,13 +12,13 @@ export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      login(email, password, userType)
+      const user = await login(email, password, userType)
       if (userType === 'creative') {
         navigate('/dashboard/creative')
       } else {

@@ -13,7 +13,7 @@ export default function SignupPage() {
   const { signup } = useAuth()
   const navigate = useNavigate()
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -25,7 +25,7 @@ export default function SignupPage() {
     }
 
     try {
-      signup(email, password, fullName, userType)
+      const user = await signup(email, password, fullName, userType)
       if (userType === 'creative') {
         navigate('/dashboard/creative')
       } else {

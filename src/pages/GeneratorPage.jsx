@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Upload, AlertCircle, RefreshCw, Zap } from 'lucide-react'
@@ -16,8 +16,16 @@ const CATEGORIES = [
 ]
 
 export default function GeneratorPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login')
+    }
+  }, [loading, user, navigate])
+
+  if (loading || !user) return null
   const [uploadedImage, setUploadedImage] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('fashion')
   const [processing, setProcessing] = useState(false)

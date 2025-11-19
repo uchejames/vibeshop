@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { BarChart3, Package, Eye, CheckCircle, Clock } from 'lucide-react'
 
 const MOCK_STATS = {
@@ -18,13 +19,16 @@ const MOCK_PRODUCTS = [
 ]
 
 export default function CreativeDashboard() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
 
-  if (!user || user.userType !== 'creative') {
-    navigate('/login')
-    return null
-  }
+  useEffect(() => {
+    if (!loading && (!user || user.userType !== 'creative')) {
+      navigate('/login')
+    }
+  }, [loading, user, navigate])
+
+  if (loading || !user) return null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-20 pb-12">

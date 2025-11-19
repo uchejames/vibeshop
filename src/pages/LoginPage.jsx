@@ -6,7 +6,6 @@ import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [userType, setUserType] = useState('customer')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const { login } = useAuth()
@@ -18,14 +17,16 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const user = await login(email, password, userType)
-      if (userType === 'creative') {
+      const user = await login(email, password)
+      
+      // Route based on user type from database
+      if (user.userType === 'creative') {
         navigate('/dashboard/creative')
       } else {
         navigate('/shop')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.')
     } finally {
       setLoading(false)
     }
@@ -48,29 +49,6 @@ export default function LoginPage() {
             <p className="text-red-200 text-sm">{error}</p>
           </div>
         )}
-
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setUserType('customer')}
-            className={`flex-1 py-2 rounded-lg transition-colors text-sm font-medium ${
-              userType === 'customer'
-                ? 'bg-orange-500 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            Customer
-          </button>
-          <button
-            onClick={() => setUserType('creative')}
-            className={`flex-1 py-2 rounded-lg transition-colors text-sm font-medium ${
-              userType === 'creative'
-                ? 'bg-orange-500 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            Creative
-          </button>
-        </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -106,16 +84,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 text-white font-semibold rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
           >
-            <LogIn size={16} />
+            <LogIn size={18} />
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <p className="text-center text-slate-400 text-sm mt-6">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-orange-400 hover:text-orange-300">
+          <Link to="/signup" className="text-orange-400 hover:text-orange-300 font-medium">
             Sign up
           </Link>
         </p>

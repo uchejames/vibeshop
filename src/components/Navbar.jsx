@@ -1,98 +1,105 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
-import { LogOut, ShoppingBag, LayoutDashboard, Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { ShoppingCart, LogOut, User, LayoutDashboard } from 'lucide-react'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const { items } = useCart()
   const navigate = useNavigate()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const handleLogout = () => {
-    logout()
-    navigate('/')
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
+  const getDashboardLink = () => {
+    if (!user) return '/login'
+    return user.userType === 'creative' ? '/dashboard/creative' : '/dashboard/customer'
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-500 rounded-lg flex items-center justify-center font-bold text-white">
-            V
-          </div>
-          <h1 className="text-xl font-bold text-white hidden md:block">Vibeshop</h1>
-        </Link>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-500 rounded-lg flex items-center justify-center font-bold text-white">
+              V
+            </div>
+            <span className="text-xl font-bold text-white">Vibeshop</span>
+          </Link>
 
-        <button 
-          className="md:hidden text-white"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        <div className={`${
-          mobileMenuOpen ? 'flex' : 'hidden md:flex'
-        } absolute md:static top-full left-0 right-0 md:right-auto flex-col md:flex-row md:items-center gap-4 p-4 md:p-0 bg-slate-900 md:bg-transparent border-b md:border-b-0 border-slate-800`}>
-          {user ? (
-            <>
-              <Link to="/shop">
-                <button className="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 w-full md:w-auto justify-center">
-                  <ShoppingBag size={16} />
-                  Shop
-                </button>
+          <div className="flex items-center gap-6">
+            <Link to="/shop" className="text-slate-300 hover:text-white transition-colors">
+              Shop
+            </Link>
+            
+            {user && user.userType === 'creative' && (
+              <Link to="/generator" className="text-slate-300 hover:text-white transition-colors">
+                Generator
               </Link>
+            )}
 
-              {user.userType === 'creative' ? (
-                <>
-                  <Link to="/dashboard/creative">
-                    <button className="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 w-full md:w-auto justify-center">
-                      <LayoutDashboard size={16} />
-                      Dashboard
-                    </button>
-                  </Link>
-                  <Link to="/generator">
-                    <button className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg w-full md:w-auto">
-                      Generate Product
-                    </button>
-                  </Link>
-                </>
-              ) : (
-                <Link to="/cart">
-                  <button className="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 w-full md:w-auto justify-center relative">
-                    <ShoppingBag size={16} />
-                    Cart {items.length > 0 && <span className="ml-1 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">{items.length}</span>}
+            {user ? (
+              <>
+                <Link 
+                  to={getDashboardLink()} 
+                  className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+                >
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </Link>
+
+                <Link to="/cart" className="relative text-slate-300 hover:text-white transition-colors">
+                  <ShoppingCart size={20} />
+                  {items.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {items.length}
+                    </span>
+                  )}
+                </Link>
+
+                <div className="flex items-center gap-3 pl-3 border-l border-slate-700">
+                  <div className="text-right">
+                    <p className="text-sm text-white font-medium">{user.fullName}</p>
+                    <p className="text-xs text-slate-400 capitalize">{user.userType}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link to="/cart" className="relative text-slate-300 hover:text-white transition-colors">
+                  <ShoppingCart size={20} />
+                  {items.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {items.length}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/login">
+                  <button className="px-4 py-2 text-slate-300 hover:text-white transition-colors">
+                    Login
                   </button>
                 </Link>
-              )}
-
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-lg">
-                <span className="text-sm text-slate-300">{user.email}</span>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 border border-red-600/30 text-red-400 hover:bg-red-500/10 rounded-lg flex items-center gap-2 w-full md:w-auto justify-center"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/shop">
-                <button className="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-800 rounded-lg w-full md:w-auto">
-                  Browse Shop
-                </button>
-              </Link>
-              <Link to="/login">
-                <button className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg w-full md:w-auto">
-                  Sign In
-                </button>
-              </Link>
-            </>
-          )}
+                <Link to="/signup">
+                  <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors">
+                    Sign Up
+                  </button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>

@@ -12,6 +12,9 @@ export const supabaseAuth = {
       if (authError) throw authError
       if (!authData.user) throw new Error('Failed to create user')
 
+      // Wait a moment for auth user to be fully created
+      await new Promise(resolve => setTimeout(resolve, 500))
+
       // Create user profile in users table
       const { data, error } = await supabase
         .from('users')
@@ -25,12 +28,15 @@ export const supabaseAuth = {
         ])
         .select()
 
-      if (error) throw error
+      if (error) {
+        console.error('[supabaseAuth] Error creating user profile:', error)
+        throw error
+      }
 
       // If creative, create store
       if (userType === 'creative') {
-        const storeSlug = fullName.toLowerCase().replace(/\s+/g, '-')
-        await supabase
+        const storeSlug = fullName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now()
+        const { error: storeError } = await supabase
           .from('creative_stores')
           .insert([
             {
@@ -39,10 +45,15 @@ export const supabaseAuth = {
               store_slug: storeSlug,
             },
           ])
+        
+        if (storeError) {
+          console.error('[supabaseAuth] Error creating store:', storeError)
+        }
       }
 
       return { user: authData.user, error: null }
     } catch (error) {
+      console.error('[supabaseAuth] SignUp error:', error)
       return { user: null, error: error.message }
     }
   },
@@ -55,19 +66,22 @@ export const supabaseAuth = {
       })
 
       if (error) throw error
+      if (!data.user) throw new Error('Login failed')
+      
       return { user: data.user, error: null }
     } catch (error) {
+      console.error('[supabaseAuth] SignIn error:', error)
       return { user: null, error: error.message }
     }
   },
 
   getCurrentUser: async () => {
     try {
-      const { data, error } = await supabase.auth.getUser()
+      const { data: { user }, error } = await supabase.auth.getUser()
       if (error) throw error
-      return data.user || null
+      return user
     } catch (error) {
-      console.error('[v0] Error getting current user:', error)
+      console.error('[supabaseAuth] Error getting current user:', error)
       return null
     }
   },
@@ -80,10 +94,14 @@ export const supabaseAuth = {
         .eq('id', userId)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('[supabaseAuth] Error fetching user profile:', error)
+        throw error
+      }
+      
       return data
     } catch (error) {
-      console.error('[v0] Error fetching user profile:', error)
+      console.error('[supabaseAuth] getUserProfile error:', error)
       return null
     }
   },
@@ -94,16 +112,18 @@ export const supabaseAuth = {
       if (error) throw error
       return { error: null }
     } catch (error) {
+      console.error('[supabaseAuth] SignOut error:', error)
       return { error: error.message }
     }
   },
 
   getSession: async () => {
     try {
-      const { data, error } = await supabase.auth.getSession()
+      const { data: { session }, error } = await supabase.auth.getSession()
       if (error) throw error
-      return data.session
+      return session
     } catch (error) {
+      console.error('[supabaseAuth] Error getting session:', error)
       return null
     }
   },

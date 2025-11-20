@@ -14,9 +14,7 @@ export default function UploadSection({ onImageUpload }) {
     setIsDragging(true)
   }
 
-  const handleDragLeave = () => {
-    setIsDragging(false)
-  }
+  const handleDragLeave = () => setIsDragging(false)
 
   const handleFile = async (file) => {
     setError(null)
@@ -25,7 +23,6 @@ export default function UploadSection({ onImageUpload }) {
       setError('Please upload an image file')
       return
     }
-
     if (file.size > 10 * 1024 * 1024) {
       setError('File size must be less than 10MB')
       return
@@ -34,32 +31,26 @@ export default function UploadSection({ onImageUpload }) {
     setIsLoading(true)
 
     try {
-      // Generate unique filename
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png'
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`
+      const filePath = `originals/${fileName}`
 
-      // Upload to Supabase Storage
+      // Upload
       const { error: uploadError } = await supabase.storage
-        .from('uploads') // Make sure this bucket exists and is public!
-        .upload(`public/${fileName}`, file, {
-          cacheControl: '3600',
-          upsert: false,
-        })
+        .from('processed-images')
+        .upload(filePath, file, { upsert: false })
 
       if (uploadError) throw uploadError
 
-      // Get public URL
+      // Use PUBLIC URL (this works with remove.bg!)
       const { data } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(`public/${fileName}`)
+        .from('processed-images')
+        .getPublicUrl(filePath)
 
-      const publicUrl = data.publicUrl
-
-      // Pass real public URL to parent
-      onImageUpload(publicUrl)
+      onImageUpload(data.publicUrl)
     } catch (err) {
-      console.error('Upload failed:', err)
-      setError('Upload failed. Please try again.')
+      console.error(err)
+      setError('Upload failed: ' + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -68,13 +59,11 @@ export default function UploadSection({ onImageUpload }) {
   const handleDrop = (e) => {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
   }
 
   const handleFileInput = (e) => {
-    const file = e.target.files?.[0]
-    if (file) handleFile(file)
+    if (e.target.files?.[0]) handleFile(e.target.files[0])
   }
 
   return (
@@ -83,24 +72,16 @@ export default function UploadSection({ onImageUpload }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`border-2 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
-        isDragging
-          ? 'border-cyan-400 bg-cyan-500/5'
-          : 'border-slate-600 bg-slate-800/30 hover:border-slate-500'
+        isDragging ? 'border-cyan-400 bg-cyan-500/5' : 'border-slate-600 bg-slate-800/30 hover:border-slate-500'
       }`}
     >
       <div className="flex flex-col items-center gap-4">
         <div className="w-16 h-16 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full flex items-center justify-center">
-          {isLoading ? (
-            <Loader2 className="animate-spin text-cyan-400" size={32} />
-          ) : (
-            <Upload size={32} className="text-cyan-400" />
-          )}
+          {isLoading ? <Loader2 className="animate-spin text-cyan-400" size={32} /> : <Upload size={32} className="text-cyan-400" />}
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold text-white mb-2">
-            Drop your product photo here
-          </h3>
+          <h3 className="text-lg font-semibold text-white mb-2">Drop your product photo here</h3>
           <p className="text-slate-400 mb-4">or click to browse files</p>
         </div>
 
@@ -122,13 +103,11 @@ export default function UploadSection({ onImageUpload }) {
           {isLoading ? 'Uploading...' : 'Select Image'}
         </button>
 
-        <p className="text-xs text-slate-500 mt-4">
-          Supported formats: JPG, PNG, WebP (Max 10MB)
-        </p>
+        <p className="text-xs text-slate-500 mt-4">JPG, PNG, WebP • Max 10MB</p>
 
         {error && (
           <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm">
-            <AlertCircle size={16} className="flex-shrink-0" />
+            <AlertCircle size={16} />
             {error}
           </div>
         )}

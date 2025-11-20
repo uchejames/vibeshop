@@ -35,7 +35,7 @@ export default function GeneratorPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      anynavigate('/login')
+      navigate('/login')
     }
   }, [loading, user, navigate])
 
@@ -249,7 +249,7 @@ export default function GeneratorPage() {
                 {results.enhanced && (
                   <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
                     <h4 className="text-sm font-semibold text-slate-300 mb-3">Enhanced Image</h4>
-                    <img results={results.enhanced} alt="Enhanced" className="w-full rounded-lg shadow-xl" />
+                    <img src={results.enhanced} alt="Enhanced" className="w-full rounded-lg shadow-xl" />
                   </div>
                 )}
 

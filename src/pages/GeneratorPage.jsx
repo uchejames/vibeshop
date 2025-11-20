@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import { Upload, AlertCircle, RefreshCw, Zap } from 'lucide-react'
+import { Upload, AlertCircle, RefreshCw, Zap, CheckCircle, Loader2 } from 'lucide-react'
 import UploadSection from '../components/UploadSection'
 
 const CATEGORIES = [
   { id: 'fashion', label: 'Fashion & Apparel', icon: '👕' },
   { id: 'art', label: 'Art & Crafts', icon: '🎨' },
   { id: 'clothing', label: 'Clothing', icon: '👗' },
-  { id: 'accessories', label: 'Accessories', icon: '💍' },
+  { id: 'accessories', label: 'Accessories', icon: '👜' },
   { id: 'electronics', label: 'Electronics', icon: '📱' },
   { id: 'home', label: 'Home & Garden', icon: '🏠' },
   { id: 'beauty', label: 'Beauty & Personal Care', icon: '💄' },
@@ -18,6 +18,17 @@ const CATEGORIES = [
 export default function GeneratorPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const [uploadedImage, setUploadedImage] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState('fashion')
+  const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState(null)
+  const [currentStep, setCurrentStep] = useState('')
+  const [results, setResults] = useState({
+    removedBg: null,
+    enhanced: null,
+    listing: null,
+    poster: null,
+  })
 
   useEffect(() => {
     if (!loading && !user) {
@@ -26,27 +37,12 @@ export default function GeneratorPage() {
   }, [loading, user, navigate])
 
   if (loading || !user) return null
-  const [uploadedImage, setUploadedImage] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState('fashion')
-  const [processing, setProcessing] = useState(false)
-  const [error, setError] = useState(null)
-  const [results, setResults] = useState({
-    removedBg: null,
-    enhanced: null,
-    listing: null,
-    poster: null,
-    shareLink: null,
-  })
-
-  if (!user) {
-    navigate('/login')
-    return null
-  }
 
   const handleImageUpload = (imageUrl) => {
     setUploadedImage(imageUrl)
-    setResults({ removedBg: null, enhanced: null, listing: null, poster: null, shareLink: null })
+    setResults({ removedBg: null, enhanced: null, listing: null, poster: null })
     setError(null)
+    setCurrentStep('')
   }
 
   const handleProcess = async () => {
@@ -54,11 +50,18 @@ export default function GeneratorPage() {
 
     setProcessing(true)
     setError(null)
+    setCurrentStep('Removing background...')
+
     try {
-      const response = await fetch('/api/process-product', {
+      // Call your backend API endpoint
+      const response = await fetch('https://hzqpiwlunhtfpqipjzka.supabase.co/functions/v1/image-transform', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: uploadedImage, category: selectedCategory }),
+        body: JSON.stringify({
+          imageUrl: uploadedImage,
+          category: selectedCategory,
+          userId: user.id,
+        }),
       })
 
       if (!response.ok) {
@@ -67,14 +70,12 @@ export default function GeneratorPage() {
       }
 
       const data = await response.json()
-
-      const listingId = Date.now().toString()
-      const shareLink = `${window.location.origin}/listing/${listingId}`
-
-      setResults({ ...data, shareLink })
+      setResults(data)
+      setCurrentStep('Complete!')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Processing failed. Please try again.'
       setError(message)
+      setCurrentStep('')
     } finally {
       setProcessing(false)
     }
@@ -82,8 +83,35 @@ export default function GeneratorPage() {
 
   const handleReset = () => {
     setUploadedImage(null)
-    setResults({ removedBg: null, enhanced: null, listing: null, poster: null, shareLink: null })
+    setResults({ removedBg: null, enhanced: null, listing: null, poster: null })
     setError(null)
+    setCurrentStep('')
+  }
+
+  const handleSaveListing = async () => {
+    if (!results.listing) return
+
+    try {
+      // Save to Supabase products table
+      const response = await fetch('/api/save-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...results.listing,
+          enhanced_image_url: results.enhanced,
+          original_image_url: uploadedImage,
+          creative_id: user.id,
+          category: selectedCategory,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to save product')
+
+      alert('Product saved successfully!')
+      navigate('/dashboard/creative')
+    } catch (err) {
+      alert('Failed to save product: ' + err.message)
+    }
   }
 
   return (
@@ -110,9 +138,9 @@ export default function GeneratorPage() {
                 <p className="text-slate-400 text-sm">AI enhances and generates listing</p>
               </div>
               <div className="p-6 border border-slate-700 bg-slate-800/50 rounded-lg">
-                <RefreshCw size={24} className="text-green-400 mb-3" />
+                <CheckCircle size={24} className="text-green-400 mb-3" />
                 <h3 className="text-lg font-semibold text-white mb-2">Publish</h3>
-                <p className="text-slate-400 text-sm">List your product and start selling</p>
+                <p className="text-slate-400 text-sm">Save and list your product</p>
               </div>
             </div>
           </div>
@@ -122,7 +150,7 @@ export default function GeneratorPage() {
               <h2 className="text-3xl font-bold text-white">Product Processing</h2>
               <button
                 onClick={handleReset}
-                className="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2"
+                className="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <RefreshCw size={16} />
                 Start Over
@@ -136,11 +164,12 @@ export default function GeneratorPage() {
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
+                    disabled={processing}
                     className={`p-3 rounded-lg border-2 transition-all ${
                       selectedCategory === cat.id
                         ? 'border-orange-400 bg-orange-500/10 text-orange-300'
                         : 'border-slate-600 bg-slate-700/30 text-slate-400 hover:border-slate-500'
-                    }`}
+                    } ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="text-2xl mb-1">{cat.icon}</div>
                     <div className="text-xs font-medium">{cat.label}</div>
@@ -159,13 +188,20 @@ export default function GeneratorPage() {
               </div>
             )}
 
+            {processing && currentStep && (
+              <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-center gap-3">
+                <Loader2 size={20} className="text-blue-400 animate-spin" />
+                <p className="text-blue-300 font-medium">{currentStep}</p>
+              </div>
+            )}
+
             <div className="grid lg:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div className="p-6 border border-slate-700 bg-slate-800/50 rounded-lg">
                   <h3 className="text-sm font-semibold text-slate-300 mb-4">Original Image</h3>
                   <div className="aspect-square rounded-lg overflow-hidden bg-slate-900 border border-slate-700">
                     <img
-                      src={uploadedImage || "/placeholder.svg"}
+                      src={uploadedImage}
                       alt="Original product"
                       className="w-full h-full object-contain"
                     />
@@ -175,54 +211,73 @@ export default function GeneratorPage() {
                 <button
                   onClick={handleProcess}
                   disabled={processing}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
                 >
-                  <Zap size={18} />
-                  {processing ? 'Processing...' : 'Start Processing'}
+                  {processing ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={18} />
+                      Start Processing
+                    </>
+                  )}
                 </button>
               </div>
 
               <div className="space-y-4">
-                {processing ? (
+                {processing && !results.listing && (
                   <div className="flex items-center justify-center h-96">
                     <div className="text-center space-y-4">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400 mx-auto"></div>
+                      <Loader2 size={48} className="animate-spin text-orange-400 mx-auto" />
                       <p className="text-slate-400">Processing your image...</p>
                     </div>
                   </div>
-                ) : results.listing ? (
-                  <>
-                    {results.enhanced && (
-                      <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
-                        <h4 className="text-sm font-semibold text-slate-300 mb-3">Enhanced Image</h4>
-                        <img src={results.enhanced || "/placeholder.svg"} alt="Enhanced" className="w-full rounded-lg" />
+                )}
+
+                {results.enhanced && (
+                  <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Enhanced Image</h4>
+                    <img src={results.enhanced} alt="Enhanced" className="w-full rounded-lg" />
+                  </div>
+                )}
+
+                {results.poster && (
+                  <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Social Poster</h4>
+                    <img src={results.poster} alt="Poster" className="w-full rounded-lg" />
+                  </div>
+                )}
+
+                {results.listing && (
+                  <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Generated Listing</h4>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <p className="text-slate-400">Title</p>
+                        <p className="text-white font-medium">{results.listing.title}</p>
                       </div>
-                    )}
-                    {results.poster && (
-                      <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
-                        <h4 className="text-sm font-semibold text-slate-300 mb-3">Social Poster</h4>
-                        <img src={results.poster || "/placeholder.svg"} alt="Poster" className="w-full rounded-lg" />
+                      <div>
+                        <p className="text-slate-400">Description</p>
+                        <p className="text-white text-xs">{results.listing.description}</p>
                       </div>
-                    )}
-                    <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
-                      <h4 className="text-sm font-semibold text-slate-300 mb-3">Generated Listing</h4>
-                      <div className="space-y-3 text-sm">
-                        <div>
-                          <p className="text-slate-400">Title</p>
-                          <p className="text-white font-medium">{results.listing?.title}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-400">Description</p>
-                          <p className="text-white text-xs">{results.listing?.description}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-400">Price Range</p>
-                          <p className="text-orange-400 font-bold">₦{results.listing?.priceMin} - ₦{results.listing?.priceMax}</p>
-                        </div>
+                      <div>
+                        <p className="text-slate-400">Suggested Price</p>
+                        <p className="text-orange-400 font-bold">
+                          ₦{results.listing.priceMin?.toLocaleString()} - ₦{results.listing.priceMax?.toLocaleString()}
+                        </p>
                       </div>
                     </div>
-                  </>
-                ) : null}
+                    <button
+                      onClick={handleSaveListing}
+                      className="w-full mt-4 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      Save to My Products
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

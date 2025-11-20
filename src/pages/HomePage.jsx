@@ -17,7 +17,7 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white py-14 md:py-0">
       <main className="pt-5">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-slate-50 to-white">
@@ -46,12 +46,12 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="relative flex justify-end">
+              <div className="relative flex justify-center md:justify-center lg:justify-end">
                 <img
                   src="/assets/hero-image.png"
                   alt="Hero"
                   loading="lazy"
-                  className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl object-cover rounded-2xl "
+                  className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl object-cover rounded-2xl justify-center "
                 />
               </div>
             </div>
@@ -59,8 +59,11 @@ export default function HomePage() {
         </section>
 
         {/* About Us Section */}
-        <section className="py-20 bg-alice-600">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="py-4 md:py-20 bg-alice-600">
+          <div className="max-w-7xl mx-auto px-6 text-center md:text-left">
+            <h2 className="text-4xl font-bold text-slate-900 text-center py-16">
+                  About <span className="text-orange-600">VibeShop</span>
+                </h2>
             <div className="grid md:grid-cols-2 gap-12 items-center">
               
               {/* Left: Image */}
@@ -77,9 +80,9 @@ export default function HomePage() {
 
               {/* Right: Content */}
               <div className="space-y-6">
-                <h2 className="text-4xl font-bold text-slate-900">
+                {/*<h2 className="text-4xl font-bold text-slate-900">
                   About <span className="text-orange-600">VibeShop</span>
-                </h2>
+                </h2>*/}
 
                 <p className="text-lg text-slate-600 leading-relaxed">
                   VibeShop is a home for creativity — a marketplace built to connect talented 
@@ -88,7 +91,7 @@ export default function HomePage() {
                 </p>
 
                 <p className="text-lg text-slate-600 leading-relaxed">
-                  From handcrafted pieces to modern tech accessories, our mission is to empower 
+                  From handcrafted pieces to modern accessories, our mission is to empower 
                   creatives with the tools, visibility, and community they need to grow. Whether 
                   you're here to shop unique items or build your own brand, you're in the right place.
                 </p>

@@ -1,7 +1,10 @@
+// src/components/UploadSection.jsx
 import { useState } from 'react'
-import { Upload, ImageIcon, AlertCircle } from 'lucide-react'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
+import { Upload, ImageIcon, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function UploadSection({ onImageUpload }) {
+  const supabase = useSupabaseClient()
   const [isDragging, setIsDragging] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -15,7 +18,7 @@ export default function UploadSection({ onImageUpload }) {
     setIsDragging(false)
   }
 
-  const handleFile = (file) => {
+  const handleFile = async (file) => {
     setError(null)
 
     if (!file.type.startsWith('image/')) {
@@ -29,19 +32,37 @@ export default function UploadSection({ onImageUpload }) {
     }
 
     setIsLoading(true)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const result = e.target?.result
-      if (result) {
-        onImageUpload(result)
-        setIsLoading(false)
-      }
-    }
-    reader.onerror = () => {
-      setError('Failed to read file')
+
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png'
+      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('uploads') // Make sure this bucket exists and is public!
+        .upload(`public/${fileName}`, file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(`public/${fileName}`)
+
+      const publicUrl = data.publicUrl
+
+      // Pass real public URL to parent
+      onImageUpload(publicUrl)
+    } catch (err) {
+      console.error('Upload failed:', err)
+      setError('Upload failed. Please try again.')
+    } finally {
       setIsLoading(false)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleDrop = (e) => {
@@ -52,7 +73,7 @@ export default function UploadSection({ onImageUpload }) {
   }
 
   const handleFileInput = (e) => {
-    const file = e.currentTarget.files?.[0]
+    const file = e.target.files?.[0]
     if (file) handleFile(file)
   }
 
@@ -69,8 +90,13 @@ export default function UploadSection({ onImageUpload }) {
     >
       <div className="flex flex-col items-center gap-4">
         <div className="w-16 h-16 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full flex items-center justify-center">
-          <Upload size={32} className="text-cyan-400" />
+          {isLoading ? (
+            <Loader2 className="animate-spin text-cyan-400" size={32} />
+          ) : (
+            <Upload size={32} className="text-cyan-400" />
+          )}
         </div>
+
         <div>
           <h3 className="text-lg font-semibold text-white mb-2">
             Drop your product photo here
@@ -90,10 +116,10 @@ export default function UploadSection({ onImageUpload }) {
         <button
           onClick={() => document.getElementById('file-input')?.click()}
           disabled={isLoading}
-          className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 rounded-lg flex items-center gap-2 disabled:opacity-50"
+          className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 rounded-lg flex items-center gap-2 disabled:opacity-50 transition-all"
         >
           <ImageIcon size={16} />
-          {isLoading ? 'Processing...' : 'Select Image'}
+          {isLoading ? 'Uploading...' : 'Select Image'}
         </button>
 
         <p className="text-xs text-slate-500 mt-4">

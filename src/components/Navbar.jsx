@@ -34,6 +34,10 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-6">
+            <Link to="/product" className="text-slate-300 hover:text-white transition-colors">
+              Products
+            </Link>
+
             <Link to="/shop" className="text-slate-300 hover:text-white transition-colors">
               Shop
             </Link>

@@ -1,155 +1,177 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, ShoppingCart, Star, Search } from 'lucide-react'
+import { User, Star, Search } from 'lucide-react'
 
-const MOCK_PRODUCTS = [
+const aboutImage = `/mnt/data/A_webpage_section_of_VibeShop’s_“About_Us”_page_fe.png` // local file you uploaded
+
+const MOCK_SELLERS = [
   {
-    id: '1',
-    title: 'Handmade Leather Bag',
-    price_ngn: 15000,
-    enhanced_image_url: '/leather-bag.jpg',
-    category: 'Fashion',
-    creative_id: 'creative_1',
-    store_id: 'store_1',
-    views_count: 245,
+    id: 'creative_1',
+    name: "Ella’s Collection",
+    subtitle: 'Dealers of wears collection',
+    products: 24,
+    rating: 4.9,
+    avatar: '/assets/Ellipse 6.png',
+    banner: '/assets/about2.jpg',
+    bio: "Ella curates timeless, handcrafted fashions inspired by West African patterns. She focuses on quality materials and slow-made production.",
+    location: 'Lagos, NG'
   },
   {
-    id: '2',
-    title: 'Organic Skincare Set',
-    price_ngn: 8500,
-    enhanced_image_url: '/skincare.jpg',
-    category: 'Beauty',
-    creative_id: 'creative_2',
-    store_id: 'store_2',
-    views_count: 189,
+    id: 'creative_2',
+    name: 'Modern Timepieces',
+    subtitle: 'Timeless wristwear',
+    products: 18,
+    rating: 4.8,
+    avatar: '/assets/Ellipse 6-1.png',
+    banner: '/assets/about1.jpg',
+    bio: "A small studio restoring and reimagining classic watches — each piece is serviced and styled with a contemporary edge.",
+    location: 'Abuja, NG'
   },
   {
-    id: '3',
-    title: 'Beaded Art Piece',
-    price_ngn: 25000,
-    enhanced_image_url: '/art-beads.jpg',
-    category: 'Art',
-    creative_id: 'creative_3',
-    store_id: 'store_3',
-    views_count: 412,
+    id: 'creative_3',
+    name: 'Andy Crafts',
+    subtitle: 'Handmade crafts',
+    products: 32,
+    rating: 5.0,
+    avatar: '/assets/Ellipse 6-2.png',
+    banner: '/assets/about.jpg',
+    bio: "Andy makes one-of-a-kind homewares using reclaimed materials. Sustainability and storytelling are at the heart of every item.",
+    location: 'Enugu, NG'
   },
   {
-    id: '4',
-    title: 'Cotton Summer Dress',
-    price_ngn: 12000,
-    enhanced_image_url: '/summer-dress.jpg',
-    category: 'Clothing',
-    creative_id: 'creative_1',
-    store_id: 'store_1',
-    views_count: 523,
+    id: 'creative_4',
+    name: 'Wave Audio',
+    subtitle: 'Audio gear & accessories',
+    products: 15,
+    rating: 4.7,
+    avatar: '/assets/Ellipse 6-3.png',
+    banner: '/assets/about.jpg',
+    bio: "Wave Audio hand-builds audio accessories for creators — from custom cables to acoustic treatments.",
+    location: 'Port Harcourt, NG'
   },
 ]
 
 export default function ShopPage() {
-  const [products, setProducts] = useState(MOCK_PRODUCTS)
-  const [filteredProducts, setFilteredProducts] = useState(MOCK_PRODUCTS)
-  const [selectedCategory, setSelectedCategory] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [query, setQuery] = useState('')
+  const [selectedLocation, setSelectedLocation] = useState('All')
 
-  const categories = ['Fashion', 'Art', 'Clothing', 'Accessories', 'Electronics', 'Home', 'Beauty', 'Sports']
+  const locations = useMemo(() => ['All', ...new Set(MOCK_SELLERS.map(s => s.location))], [])
 
-  useEffect(() => {
-    let filtered = products
+  const filtered = useMemo(() => {
+    return MOCK_SELLERS.filter(s => {
+      const matchesQuery =
+        !query ||
+        s.name.toLowerCase().includes(query.toLowerCase()) ||
+        s.subtitle.toLowerCase().includes(query.toLowerCase()) ||
+        s.bio.toLowerCase().includes(query.toLowerCase())
 
-    if (selectedCategory) {
-      filtered = filtered.filter(p => p.category === selectedCategory)
-    }
+      const matchesLocation = selectedLocation === 'All' || s.location === selectedLocation
 
-    if (searchQuery) {
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    }
+      return matchesQuery && matchesLocation
+    })
+  }, [query, selectedLocation])
 
-    setFilteredProducts(filtered)
-  }, [selectedCategory, searchQuery, products])
-
-  return (
+ return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-20">
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Search & Filter Section */}
-        <div className="mb-12 space-y-6">
-          <div className="relative">
-            <Search size={20} className="absolute left-4 top-3 text-slate-500" />
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white">Discover Creatives</h1>
+          <p className="text-lg text-slate-400 mt-2">Browse makers, learn their stories, and shop directly from their stores.</p>
+        </div>
+
+        {/* Controls */}
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-8">
+          <div className="relative w-full md:w-1/2">
+            <Search size={18} className="absolute left-3 top-3 text-slate-500" />
             <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-400"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search creatives, bios, or subtitle..."
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-700 bg-slate-800 focus:outline-none focus:border-orange-400 text-white placeholder-slate-500"
             />
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
-                selectedCategory === null
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-slate-400">Location:</label>
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-slate-700 bg-slate-800 text-white"
             >
-              All Products
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
-                  selectedCategory === cat
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+              {locations.map(loc => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Products Grid */}
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-slate-400 text-lg">No products found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <Link key={product.id} to={`/store/${product.store_id}/${product.id}`}>
-                <div className="border border-slate-700 bg-slate-800/50 overflow-hidden hover:border-orange-400 transition-colors cursor-pointer group h-full rounded-lg">
-                  <div className="aspect-square overflow-hidden bg-slate-900 relative">
-                    <img
-                      src={product.enhanced_image_url || "/placeholder.svg"}
-                      alt={product.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                    <button className="absolute top-2 right-2 p-2 bg-slate-900/80 rounded-lg hover:bg-orange-500 transition-colors">
-                      <Heart size={20} className="text-slate-300" />
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-white mb-2 line-clamp-2">{product.title}</h3>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
-                        ))}
+        {/* Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filtered.map((seller) => (
+            <div key={seller.id} className="bg-slate-800/50 rounded-2xl shadow-md border border-slate-700 overflow-hidden hover:border-orange-400 transition-colors">
+              {/* Banner */}
+              <div className="h-36 relative">
+                <img
+                  src={seller.banner || '/assets/banner-placeholder.png'}
+                  alt={`${seller.name} banner`}
+                  className="w-full h-full object-cover"
+                />
+                {/* Avatar overlaps */}
+                <div className="absolute -bottom-10 left-6">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-slate-800 bg-slate-700 shadow">
+                    {seller.avatar ? (
+                      <img src={seller.avatar} alt={seller.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-lg font-semibold text-slate-300">
+                        {seller.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
                       </div>
-                      <span className="text-xs text-slate-400">(12 reviews)</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-orange-400">₦{product.price_ngn.toLocaleString()}</span>
-                      <ShoppingCart size={20} className="text-slate-400 group-hover:text-orange-400 transition-colors" />
-                    </div>
+                    )}
                   </div>
                 </div>
-              </Link>
-            ))}
+              </div>
+
+              {/* Content */}
+              <div className="pt-12 px-6 pb-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">{seller.name}</h3>
+                    <p className="text-sm text-slate-400 mt-1">{seller.subtitle}</p>
+                    <p className="text-sm text-slate-300 mt-3 line-clamp-3">{seller.bio}</p>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Star size={16} className="text-amber-400" />
+                      <span className="text-sm font-semibold text-white">{seller.rating}</span>
+                    </div>
+                    <div className="text-sm text-slate-400 mt-2">{seller.products} Products</div>
+                    <div className="text-xs text-slate-500 mt-1">{seller.location}</div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <Link to={`/store/${seller.id}`} className="flex-1">
+                    <button className="w-full px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold shadow transition-colors">
+                      View Store
+                    </button>
+                  </Link>
+
+                  <Link to={`/store/${seller.id}/contact`} className="w-28">
+                    <button className="w-full px-3 py-3 border border-slate-700 rounded-lg text-slate-300 hover:bg-slate-700 transition-colors">
+                      Message
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty state */}
+        {filtered.length === 0 && (
+          <div className="text-center py-16 text-slate-400">
+            No creatives match your search â€" try a different keyword.
           </div>
         )}
       </main>

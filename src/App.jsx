@@ -5,11 +5,12 @@ import Navbar from './components/Navbar'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import ProductPage from './pages/ProductPage'
 import ShopPage from './pages/ShopPage'
 import GeneratorPage from './pages/GeneratorPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
-import CreativeDashboard from './pages/CreativeDashboard'
+import CreativeDashboard from './pages/CreativeDashboard/CreativeDashboard'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CreativeStorePage from './pages/CreativeStorePage'
 import CustomerDashboard from './pages/CustomerDashboard'
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/product" element={<ProductPage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/generator" element={<GeneratorPage />} />
             <Route path="/cart" element={<CartPage />} />

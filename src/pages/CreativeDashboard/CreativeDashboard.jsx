@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { BarChart3, Package, Eye, CheckCircle, TrendingUp } from 'lucide-react'

@@ -5,14 +5,14 @@ import { Upload, AlertCircle, RefreshCw, Zap, CheckCircle, Loader2 } from 'lucid
 import UploadSection from '../components/UploadSection'
 
 const CATEGORIES = [
-  { id: 'fashion', label: 'Fashion & Apparel', icon: 'shirt' },
-  { id: 'art', label: 'Art & Crafts', icon: 'art' },
-  { id: 'clothing', label: 'Clothing', icon: 'dress' },
-  { id: 'accessories', label: 'Accessories', icon: 'bag' },
-  { id: 'electronics', label: 'Electronics', icon: 'phone' },
-  { id: 'home', label: 'Home & Garden', icon: 'home' },
-  { id: 'beauty', label: 'Beauty & Personal Care', icon: 'makeup' },
-  { id: 'sports', label: 'Sports & Outdoors', icon: 'ball' },
+  { id: 'fashion', label: 'Fashion & Apparel', icon: '👔' },
+  { id: 'art', label: 'Art & Crafts', icon: '🎨' },
+  { id: 'clothing', label: 'Clothing', icon: '👗' },
+  { id: 'accessories', label: 'Accessories', icon: '👜' },
+  { id: 'electronics', label: 'Electronics', icon: '📱' },
+  { id: 'home', label: 'Home & Garden', icon: '🏠' },
+  { id: 'beauty', label: 'Beauty & Personal Care', icon: '💄' },
+  { id: 'sports', label: 'Sports & Outdoors', icon: '⚽' },
 ]
 
 const IMAGE_TRANSFORM_URL = 'https://hzqpiwlunhtfpqipjzka.supabase.co/functions/v1/image-transform'
@@ -24,6 +24,7 @@ export default function GeneratorPage() {
   const [uploadedImage, setUploadedImage] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('fashion')
   const [processing, setProcessing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [currentStep, setCurrentStep] = useState('')
   const [results, setResults] = useState({
@@ -72,9 +73,11 @@ export default function GeneratorPage() {
       }
 
       const data = await response.json()
+      console.log('Processing results:', data)
       setResults(data)
       setCurrentStep('Complete!')
     } catch (err) {
+      console.error('Processing error:', err)
       setError(err.message || 'Processing failed. Please try again.')
       setCurrentStep('')
     } finally {
@@ -89,37 +92,63 @@ export default function GeneratorPage() {
     setCurrentStep('')
   }
 
-  // FIXED: removed the stray word "rotating"
   const handleSaveListing = async () => {
-    if (!results.listing || !uploadedImage) return
+    if (!results.listing || !uploadedImage) {
+      setError('Missing listing data or image. Please process the image first.')
+      return
+    }
+
+    setSaving(true)
+    setError(null)
+
+    // Prepare payload with all required fields
+    const payload = {
+      title: results.listing.title,
+      description: results.listing.description,
+      priceMin: results.listing.priceMin,
+      priceMax: results.listing.priceMax,
+      enhanced_image_url: results.enhanced || uploadedImage,
+      background_removed_image_url: results.removedBg || results.enhanced || uploadedImage,
+      original_image_url: uploadedImage,
+      creative_id: user.id,
+      category: selectedCategory,
+      poster: results.poster || null,
+    }
+
+    console.log('Saving product with payload:', payload)
+    console.log('User ID:', user.id)
 
     try {
       const response = await fetch(SAVE_PRODUCT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: results.listing.title,
-          description: results.listing.description,
-          priceMin: results.listing.priceMin,
-          priceMax: results.listing.priceMax,
-          enhanced_image_url: results.enhanced,
-          original_image_url: uploadedImage,
-          creative_id: user.id,
-          category: selectedCategory,
-          poster: results.poster || null,
-        }),
+        body: JSON.stringify(payload),
       })
 
+      const data = await response.json()
+      console.log('Save response:', { status: response.status, data })
+
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}))
-        throw new Error(err.error || 'Failed to save product')
+        // Handle specific error cases
+        if (data.error?.includes('No store found')) {
+          throw new Error('You need to create a store first. Please go to your dashboard and set up your store.')
+        }
+        if (data.error?.includes('foreign key') || data.error?.includes('violates')) {
+          throw new Error('Account setup incomplete. Please ensure your profile is fully set up.')
+        }
+        throw new Error(data.error || `Server error: ${response.status}`)
       }
 
       alert('Product saved successfully!')
       navigate('/dashboard/creative')
     } catch (err) {
-      console.error('Save error:', err)
-      alert('Save failed: ' + (err.message || 'Unknown error'))
+      console.error('Save error details:', {
+        message: err.message,
+        stack: err.stack,
+      })
+      setError(err.message || 'Failed to save product. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -173,12 +202,12 @@ export default function GeneratorPage() {
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    disabled={processing}
+                    disabled={processing || saving}
                     className={`p-3 rounded-lg border-2 transition-all ${
                       selectedCategory === cat.id
                         ? 'border-orange-400 bg-orange-500/10 text-orange-300'
                         : 'border-slate-600 bg-slate-700/30 text-slate-400 hover:border-slate-500'
-                    } ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${processing || saving ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="text-2xl mb-1">{cat.icon}</div>
                     <div className="text-xs font-medium">{cat.label}</div>
@@ -191,7 +220,7 @@ export default function GeneratorPage() {
               <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
                 <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-red-300 font-semibold">Processing Error</h4>
+                  <h4 className="text-red-300 font-semibold">Error</h4>
                   <p className="text-red-200/80 text-sm">{error}</p>
                 </div>
               </div>
@@ -219,7 +248,7 @@ export default function GeneratorPage() {
 
                 <button
                   onClick={handleProcess}
-                  disabled={processing}
+                  disabled={processing || saving}
                   className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
                 >
                   {processing ? (
@@ -281,9 +310,17 @@ export default function GeneratorPage() {
                     </div>
                     <button
                       onClick={handleSaveListing}
-                      className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                      disabled={saving || processing}
+                      className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:transform-none flex items-center justify-center gap-2"
                     >
-                      Save to My Products
+                      {saving ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save to My Products'
+                      )}
                     </button>
                   </div>
                 )}

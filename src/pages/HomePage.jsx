@@ -58,6 +58,60 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* About Us Section */}
+        <section className="py-20 bg-alice-600">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              
+              {/* Left: Image */}
+              <div className="relative">
+                <img 
+                  src="/assets/about1.jpg" 
+                  alt="About VibeShop" 
+                  className="rounded-2xl  w-full h-96 object-cover"
+                />
+               {/* <div className="absolute -bottom-6 -right-6 bg-orange-500 text-white px-6 py-3 rounded-xl shadow-lg text-lg font-semibold">
+                  Powered by Creators
+                </div> */}
+              </div>
+
+              {/* Right: Content */}
+              <div className="space-y-6">
+                <h2 className="text-4xl font-bold text-slate-900">
+                  About <span className="text-orange-600">VibeShop</span>
+                </h2>
+
+                <p className="text-lg text-slate-600 leading-relaxed">
+                  VibeShop is a home for creativity — a marketplace built to connect talented 
+                  independent makers with the world. We believe every product has a story, and 
+                  every creator deserves a platform that helps them shine.
+                </p>
+
+                <p className="text-lg text-slate-600 leading-relaxed">
+                  From handcrafted pieces to modern tech accessories, our mission is to empower 
+                  creatives with the tools, visibility, and community they need to grow. Whether 
+                  you're here to shop unique items or build your own brand, you're in the right place.
+                </p>
+
+                <div className="flex gap-4 pt-4">
+                  <Link to="/shop">
+                    <button className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-orange-500/30">
+                      Explore Shop
+                    </button>
+                  </Link>
+
+                  <Link to="/signup">
+                    <button className="px-8 py-4 border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white text-lg font-semibold rounded-lg transition-all">
+                      Become a Seller
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
         {/* Featured Creatives */}
         <section className="py-20 bg-slate-900">
           <div className="max-w-7xl mx-auto px-6">

@@ -5,15 +5,18 @@ import { Upload, AlertCircle, RefreshCw, Zap, CheckCircle, Loader2 } from 'lucid
 import UploadSection from '../components/UploadSection'
 
 const CATEGORIES = [
-  { id: 'fashion', label: 'Fashion & Apparel', icon: '👕' },
-  { id: 'art', label: 'Art & Crafts', icon: '🎨' },
-  { id: 'clothing', label: 'Clothing', icon: '👗' },
-  { id: 'accessories', label: 'Accessories', icon: '👜' },
-  { id: 'electronics', label: 'Electronics', icon: '📱' },
-  { id: 'home', label: 'Home & Garden', icon: '🏠' },
-  { id: 'beauty', label: 'Beauty & Personal Care', icon: '💄' },
-  { id: 'sports', label: 'Sports & Outdoors', icon: '⚽' },
+  { id: 'fashion', label: 'Fashion & Apparel', icon: 'shirt' },
+  { id: 'art', label: 'Art & Crafts', icon: 'art' },
+  { id: 'clothing', label: 'Clothing', icon: 'dress' },
+  { id: 'accessories', label: 'Accessories', icon: 'bag' },
+  { id: 'electronics', label: 'Electronics', icon: 'phone' },
+  { id: 'home', label: 'Home & Garden', icon: 'home' },
+  { id: 'beauty', label: 'Beauty & Personal Care', icon: 'makeup' },
+  { id: 'sports', label: 'Sports & Outdoors', icon: 'ball' },
 ]
+
+const IMAGE_TRANSFORM_URL = 'https://hzqpiwlunhtfpqipjzka.supabase.co/functions/v1/image-transform'
+const SAVE_PRODUCT_URL = 'https://hzqpiwlunhtfpqipjzka.supabase.co/functions/v1/save-product'
 
 export default function GeneratorPage() {
   const { user, loading } = useAuth()
@@ -32,7 +35,7 @@ export default function GeneratorPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/login')
+      anynavigate('/login')
     }
   }, [loading, user, navigate])
 
@@ -53,8 +56,7 @@ export default function GeneratorPage() {
     setCurrentStep('Removing background...')
 
     try {
-      // Call your backend API endpoint
-      const response = await fetch('https://hzqpiwlunhtfpqipjzka.supabase.co/functions/v1/image-transform', {
+      const response = await fetch(IMAGE_TRANSFORM_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -65,16 +67,15 @@ export default function GeneratorPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Processing failed')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Server error ${response.status}`)
       }
 
       const data = await response.json()
       setResults(data)
       setCurrentStep('Complete!')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Processing failed. Please try again.'
-      setError(message)
+      setError(err.message || 'Processing failed. Please try again.')
       setCurrentStep('')
     } finally {
       setProcessing(false)
@@ -88,29 +89,37 @@ export default function GeneratorPage() {
     setCurrentStep('')
   }
 
+  // FIXED: removed the stray word "rotating"
   const handleSaveListing = async () => {
-    if (!results.listing) return
+    if (!results.listing || !uploadedImage) return
 
     try {
-      // Save to Supabase products table
-      const response = await fetch('/api/save-product', {
+      const response = await fetch(SAVE_PRODUCT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...results.listing,
+          title: results.listing.title,
+          description: results.listing.description,
+          priceMin: results.listing.priceMin,
+          priceMax: results.listing.priceMax,
           enhanced_image_url: results.enhanced,
           original_image_url: uploadedImage,
           creative_id: user.id,
           category: selectedCategory,
+          poster: results.poster || null,
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to save product')
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to save product')
+      }
 
       alert('Product saved successfully!')
       navigate('/dashboard/creative')
     } catch (err) {
-      alert('Failed to save product: ' + err.message)
+      console.error('Save error:', err)
+      alert('Save failed: ' + (err.message || 'Unknown error'))
     }
   }
 
@@ -232,7 +241,7 @@ export default function GeneratorPage() {
                   <div className="flex items-center justify-center h-96">
                     <div className="text-center space-y-4">
                       <Loader2 size={48} className="animate-spin text-orange-400 mx-auto" />
-                      <p className="text-slate-400">Processing your image...</p>
+                      <p className="text-slate-400">AI is working on your product...</p>
                     </div>
                   </div>
                 )}
@@ -240,39 +249,39 @@ export default function GeneratorPage() {
                 {results.enhanced && (
                   <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
                     <h4 className="text-sm font-semibold text-slate-300 mb-3">Enhanced Image</h4>
-                    <img src={results.enhanced} alt="Enhanced" className="w-full rounded-lg" />
+                    <img results={results.enhanced} alt="Enhanced" className="w-full rounded-lg shadow-xl" />
                   </div>
                 )}
 
                 {results.poster && (
                   <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Social Poster</h4>
-                    <img src={results.poster} alt="Poster" className="w-full rounded-lg" />
+                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Social Poster (Ready to Share)</h4>
+                    <img src={results.poster} alt="Poster" className="w-full rounded-lg shadow-xl" />
                   </div>
                 )}
 
                 {results.listing && (
-                  <div className="p-4 border border-slate-700 bg-slate-800/50 rounded-lg">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Generated Listing</h4>
-                    <div className="space-y-3 text-sm">
+                  <div className="p-6 border border-green-500/30 bg-slate-800/50 rounded-lg">
+                    <h4 className="text-lg font-semibold text-white mb-4">Generated Listing</h4>
+                    <div className="space-y-4 text-sm">
                       <div>
                         <p className="text-slate-400">Title</p>
-                        <p className="text-white font-medium">{results.listing.title}</p>
+                        <p className="text-white font-bold text-lg">{results.listing.title}</p>
                       </div>
                       <div>
                         <p className="text-slate-400">Description</p>
-                        <p className="text-white text-xs">{results.listing.description}</p>
+                        <p className="text-white leading-relaxed">{results.listing.description}</p>
                       </div>
                       <div>
                         <p className="text-slate-400">Suggested Price</p>
-                        <p className="text-orange-400 font-bold">
+                        <p className="text-orange-400 font-bold text-2xl">
                           ₦{results.listing.priceMin?.toLocaleString()} - ₦{results.listing.priceMax?.toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={handleSaveListing}
-                      className="w-full mt-4 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"
+                      className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg"
                     >
                       Save to My Products
                     </button>

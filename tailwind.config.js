@@ -4,6 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        secondary: "#cc5500",
         slate: {
           50: '#f8fafc',
           100: '#f1f5f9',

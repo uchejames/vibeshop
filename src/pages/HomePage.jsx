@@ -10,10 +10,10 @@ export default function HomePage() {
   ]
 
   const marketplaceProducts = [
-    { name: 'Handcrafted Drums', price: '$89.99', category: 'Music' },
-    { name: 'Premium Headphones', price: '$149.99', category: 'Electronics' },
-    { name: 'Beaded Necklace', price: '$34.99', category: 'Jewelry' },
-    { name: 'Cotton Tote Bag', price: '$24.99', category: 'Fashion' },
+    { name: 'Handcrafted Drums', price: '₦129,000.00', category: 'Music', image: '/assets/Rectangle 39.png' },
+    { name: 'Premium Headphones', price: '₦149.000.00', category: 'Electronics', image: '/assets/Rectangle 39-1.png' },
+    { name: 'Beaded Necklace', price: '₦34.000.00', category: 'Jewelry', image: '/assets/Rectangle 39-2.png' },
+    { name: 'Cotton Tote Bag', price: '₦24.00.00', category: 'Fashion', image: '/assets/Rectangle 39-3.png' },
   ]
 
   return (
@@ -83,12 +83,12 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    <div className="mt-16">
+                    <div className="mt-24">
                       <h3 className="text-xl font-bold text-slate-900">{creative.name}</h3>
                       <p className="text-sm text-slate-500 mt-1">{creative.subtitle}</p>
-                      <p className="text-slate-600 mt-4">{creative.bio}</p>
+                      {/*<p className="text-slate-600 mt-4">{creative.bio}</p>*/}
 
-                      <div className="flex items-center justify-center gap-6 mt-6 text-sm text-slate-500">
+                      <div className="flex items-center justify-center gap-6 mt-4 text-sm text-slate-500">
                         <div className="flex items-center gap-2">
                           <User size={16} className="text-slate-400" />
                           <span>{creative.products} Products</span>
@@ -99,7 +99,7 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      <button className="mt-6 w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full">
+                      <button className="mt-6 w-full px-6 py-3 bg-[#cc5500] hover:bg-orange-600 text-white font-semibold rounded-full">
                         View Profile
                       </button>
                     </div>
@@ -128,10 +128,19 @@ export default function HomePage() {
               {marketplaceProducts.map((product, idx) => (
                 <div key={idx} className="group cursor-pointer">
                   <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 mb-3 relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center">
-                      <ShoppingBag size={48} className="text-slate-300" />
-                    </div>
-                    <button className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-slate-600 bg-gradient-to-br from-slate-200 to-slate-100">
+                        {product.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
+                      </div>
+                    )}
+                    <button className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center opacity-20 group-hover:opacity-100 transition-opacity shadow-lg">
                       <Heart size={20} className="text-slate-600" />
                     </button>
                   </div>
@@ -146,7 +155,7 @@ export default function HomePage() {
 
             <div className="text-center">
               <Link to="/shop">
-                <button className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-orange-500/30">
+                <button className="px-8 py-4 bg-[#cc5500] hover:bg-orange-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-orange-500/30">
                   View More
                 </button>
               </Link>
@@ -157,12 +166,12 @@ export default function HomePage() {
         {/* CTA Sections */}
         <section className="py-20 bg-slate-50">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-6 text-center">
               {/* Want to sell yourself */}
               <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-12 border border-orange-200">
-                <h3 className="text-3xl font-bold text-slate-900 mb-4">Want to sell yourself?</h3>
+                <h3 className="text-3xl font-bold text-slate-900 mb-4">Ready to sell your craft?</h3>
                 <p className="text-lg text-slate-700 mb-6">
-                  Join thousands of creatives selling on Vibeshop. Upload your products, let AI handle the rest, and start earning today.
+                  Join a vibrant community of creators, We provide the AI tools and the platform to help you build your brand and connect with customers
                 </p>
                 <Link to="/signup">
                   <button className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-orange-500/30">
@@ -173,9 +182,9 @@ export default function HomePage() {
 
               {/* Here's the vibe */}
               <div className="bg-slate-900 rounded-2xl p-12 border border-slate-700">
-                <h3 className="text-3xl font-bold text-white mb-4">Here's the vibe</h3>
+                <h3 className="text-3xl font-bold text-white mb-4">Stay In The Vibe</h3>
                 <p className="text-lg text-slate-300 mb-6">
-                  Shop unique, handcrafted items from talented makers. Every purchase supports creativity and craftsmanship across Africa.
+                 Sign Up to stay connected to our latest update by our creatives and be the first to know
                 </p>
                 <Link to="/shop">
                   <button className="px-8 py-4 bg-white hover:bg-slate-100 text-slate-900 text-lg font-semibold rounded-lg">

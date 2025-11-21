@@ -48,7 +48,7 @@ export default function HomePage() {
 
               <div className="relative flex justify-center md:justify-center lg:justify-end">
                 <img
-                  src="/assets/hero-image.png"
+                  src="/assets/hero-image-artguru.png"
                   alt="Hero"
                   loading="lazy"
                   className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl object-cover rounded-2xl justify-center "

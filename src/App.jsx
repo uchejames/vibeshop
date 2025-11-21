@@ -21,21 +21,23 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <Navbar />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/product" element={<ProductPage />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/generator" element={<GeneratorPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/dashboard/creative" element={<CreativeDashboard />} />
-            <Route path="/dashboard/customer" element={<CustomerDashboard />} />
-            <Route path="/store/:storeId/:productId" element={<ProductDetailPage />} />
-            <Route path="/store/:storeId" element={<CreativeStorePage />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+          <div className="pt-12">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/product" element={<ProductPage />} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/generator" element={<GeneratorPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/dashboard/creative" element={<CreativeDashboard />} />
+              <Route path="/dashboard/customer" element={<CustomerDashboard />} />
+              <Route path="/store/:storeId/:productId" element={<ProductDetailPage />} />
+              <Route path="/store/:storeId" element={<CreativeStorePage />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </div>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
